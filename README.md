@@ -60,7 +60,7 @@ robotic-arm/
 ├── arduino/
 │   ├── control_servos/
 │   │	├── test-1/
-│   │	│   └── test_servo.ino
+│   │	│   └── test-1.ino
 │   │	├── 
 │   │	└── 
 │   └── comunicacion_serial/
