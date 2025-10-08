@@ -45,10 +45,6 @@ dist/
 # Archivos generados por Jupyter Notebook
 .ipynb_checkpoints/
 
-# Archivos de pruebas o temporales
-test_*/
-temp_*/
-output_*/
 
 # Archivos del sistema operativo o editor
 *.swp
