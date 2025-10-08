@@ -1,0 +1,57 @@
+# =======================================
+# 🦾 Proyecto: Brazo Manipulador de Bajo Costo
+# Ignora archivos innecesarios para el repositorio
+# =======================================
+
+# Entorno virtual de Python
+env/
+venv/
+ENV/
+.venv/
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db
+
+# Archivos temporales y de logs
+*.log
+*.tmp
+*.bak
+
+# Archivos compilados de Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Archivos de entorno o claves
+.env
+*.env
+
+# Archivos de compilación Arduino
+*.hex
+*.elf
+*.bin
+
+# Directorios de build o distribución
+build/
+dist/
+
+# Archivos de configuración de IDEs
+.vscode/
+.idea/
+*.code-workspace
+
+# Archivos generados por Jupyter Notebook
+.ipynb_checkpoints/
+
+# Archivos de pruebas o temporales
+test_*/
+temp_*/
+output_*/
+
+# Archivos del sistema operativo o editor
+*.swp
+*.swo
+~$*
+
