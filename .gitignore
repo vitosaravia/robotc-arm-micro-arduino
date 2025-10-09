@@ -52,7 +52,7 @@ dist/
 ~$*
 
 # Archivos CAD
-./planos-cad
-.stl
-.ipt
-.dwg
+planos-cad/
+*.stl
+*.ipt
+*.dwg
