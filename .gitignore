@@ -51,3 +51,8 @@ dist/
 *.swo
 ~$*
 
+# Archivos CAD
+./planos-cad
+.stl
+.ipt
+.dwg
