@@ -34,7 +34,7 @@ void setup() {
   servo_4.attach(11);   // salida pwm pin 11
   servo_5.attach(5);   // salida pwm pin 5
 
-  pinMode(gripper, INPUT);
+  pinMode(button_gripper, INPUT);
 }
 
 void loop() {
@@ -65,7 +65,7 @@ void loop() {
 
 
   // Leer el botón
-  int estadoGripper = digitalRead(gripper);
+  int estadoGripper = digitalRead(button_gripper);
 
   // Si el botón se presiona (LOW), mover el servo_5 a 60°
   if (estadoGripper == LOW) {
