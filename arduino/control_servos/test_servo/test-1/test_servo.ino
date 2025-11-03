@@ -92,5 +92,7 @@ void loop() {
   servo_3.write(Grados_3);
   servo_4.write(Grados_4);
   servo_4.write(Grados_5);
+
+  delay(50);  // Pequeña pausa para estabilidad
   
 }
