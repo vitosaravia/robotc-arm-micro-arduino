@@ -3,15 +3,16 @@ os.environ["QT_QPA_PLATFORM"] = "xcb"  # Forzar backend X11 (evita bug de Waylan
 
 import cv2
 import numpy as np
+import serial
+import time
 
 
 # ────────────────────────────────────────────────────────────────
 # 1️⃣ Inicialización de cámara e interfaz
 # ────────────────────────────────────────────────────────────────
 
-def initialize_camera(index: int = 0): #por defecto 0 (la cámara integrada). Si se pasa 1, se usa la cámara USB.
-    #Inicializa la cámara y devuelve el objeto VideoCapture.
-
+def initialize_camera(index: int = 0): #Por default 0 es la camara integrada, 1 una camara usb externa.
+    """Inicializa la cámara y devuelve el objeto VideoCapture."""
     cap = cv2.VideoCapture(index)
     if not cap.isOpened():
         raise IOError("❌ No se pudo acceder a la cámara.")
@@ -35,13 +36,13 @@ def detect_colors(frame: np.ndarray):
     """
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
-    # Rangos de color
+    # Rangos de color HSV
     lower_red1, upper_red1 = np.array([0, 120, 70]), np.array([10, 255, 255])
     lower_red2, upper_red2 = np.array([170, 120, 70]), np.array([180, 255, 255])
     lower_green, upper_green = np.array([36, 50, 70]), np.array([89, 255, 255])
     lower_blue, upper_blue = np.array([90, 60, 70]), np.array([128, 255, 255])
 
-    # Máscaras
+    # Máscaras binarias
     mask_red = cv2.inRange(hsv, lower_red1, upper_red1) + cv2.inRange(hsv, lower_red2, upper_red2)
     mask_green = cv2.inRange(hsv, lower_green, upper_green)
     mask_blue = cv2.inRange(hsv, lower_blue, upper_blue)
@@ -93,7 +94,76 @@ def determine_position(cx: int, frame_width: int):
 
 
 # ────────────────────────────────────────────────────────────────
-# 4️⃣ Dibujo y visualización
+# 4️⃣ Vector de posición del color rojo
+# ────────────────────────────────────────────────────────────────
+
+def get_red_position_vector(detections: list, frame_width: int):
+    """
+    Devuelve un vector según la posición del color rojo:
+    [1,0,0] -> izquierda
+    [0,1,0] -> centro
+    [0,0,1] -> derecha
+    [0,0,0] -> no detectado
+    """
+    for det in detections:
+        if det["color"] == "Rojo":
+            pos = determine_position(det["cx"], frame_width)
+            if pos == "IZQUIERDA":
+                return [1, 0, 0]
+            elif pos == "CENTRO":
+                return [0, 1, 0]
+            elif pos == "DERECHA":
+                return [0, 0, 1]
+    return [0, 0, 0]
+
+
+# ────────────────────────────────────────────────────────────────
+# 5️⃣ Comunicación Serial
+# ────────────────────────────────────────────────────────────────
+
+def initialize_serial(port: str = "/dev/ttyACM0", baudrate: int = 9600):
+    """Inicializa la comunicación serial con Arduino."""
+    try:
+        arduino = serial.Serial(port, baudrate, timeout=1)
+        time.sleep(2)  # Espera a que el Arduino se reinicie
+        print(f"✅ Conectado a Arduino en {port}")
+        return arduino
+    except serial.SerialException as e:
+        print(f"⚠️ No se pudo abrir el puerto serial: {e}")
+        return None
+
+
+def send_serial_signal(arduino, red_vector: list):
+    """
+    Envía una señal al Arduino según el vector rojo:
+    [1,0,0] -> 'L' (izquierda)
+    [0,1,0] -> 'C' (centro)
+    [0,0,1] -> 'R' (derecha)
+    [0,0,0] -> 'N' (no detectado)
+    """
+    if arduino is None:
+        return
+
+    if red_vector == [1, 0, 0]:
+        signal = 'L'
+    elif red_vector == [0, 1, 0]:
+        signal = 'C'
+    elif red_vector == [0, 0, 1]:
+        signal = 'R'
+    else:
+        signal = 'N'
+
+    try:
+        arduino.write(f"{signal}\n".encode('utf-8'))
+        print(f"→ Señal enviada: {signal}")
+        #este sleep me tranca todo pero sin el se satura el puerto serial
+        #time.sleep(0.2)  # Pequeña pausa para evitar saturar el buffer
+    except serial.SerialException:
+        print("⚠️ Error al enviar señal serial.")
+
+
+# ────────────────────────────────────────────────────────────────
+# 6️⃣ Dibujo y visualización
 # ────────────────────────────────────────────────────────────────
 
 def draw_detections(frame: np.ndarray, detections: list):
@@ -102,11 +172,10 @@ def draw_detections(frame: np.ndarray, detections: list):
     region_left = width // 3
     region_right = 2 * width // 3
 
-    # Dibujar zonas guía
+    # Dibujar líneas divisorias
     cv2.line(frame, (region_left, 0), (region_left, height), (255, 255, 255), 2)
     cv2.line(frame, (region_right, 0), (region_right, height), (255, 255, 255), 2)
 
-    # Dibujar cada detección
     for det in detections:
         pos = determine_position(det["cx"], width)
         x, y, w, h = det["x"], det["y"], det["w"], det["h"]
@@ -121,18 +190,18 @@ def draw_detections(frame: np.ndarray, detections: list):
 
 
 # ────────────────────────────────────────────────────────────────
-# 5️⃣ Interfaz principal
+# 7️⃣ Interfaz principal
 # ────────────────────────────────────────────────────────────────
 
 def run_interface():
-    """Ejecuta el flujo principal de captura, detección y visualización."""
+    """Ejecuta el flujo principal de captura, detección y comunicación serial."""
     window_name = "Detección de colores"
     cap = initialize_camera(0)
     create_window(window_name)
+    arduino = initialize_serial("/dev/ttyACM0", 9600)
 
     print("✅ Cámara inicializada. Presiona ESC o cierra la ventana para salir.")
 
-    # Bucle principal mientras la ventana esté visible
     while cv2.getWindowProperty(window_name, cv2.WND_PROP_VISIBLE) >= 1:
         ret, frame = cap.read()
         if not ret:
@@ -141,18 +210,25 @@ def run_interface():
         detections = detect_colors(frame)
         frame = draw_detections(frame, detections)
 
+        # Calcular vector y enviar por serial
+        height, width = frame.shape[:2]
+        red_vector = get_red_position_vector(detections, width)
+        send_serial_signal(arduino, red_vector)
+
         cv2.imshow(window_name, frame)
 
-        # Salir con ESC
         if cv2.waitKey(1) & 0xFF == 27:
             break
 
     cap.release()
     cv2.destroyAllWindows()
+    if arduino:
+        arduino.close()
+        print("🔌 Conexión serial cerrada.")
 
 
 # ────────────────────────────────────────────────────────────────
-# 6️⃣ Punto de entrada
+# 8️⃣ Punto de entrada
 # ────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
