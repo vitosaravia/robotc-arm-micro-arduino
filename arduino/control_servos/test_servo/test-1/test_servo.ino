@@ -1,6 +1,6 @@
 // Este codigo es el primero donde se toma el valor VRx del joystick para mover el servo-1
 // falta el control de un servo, que puede ser el de la pinza
-
+// este codigo es por control de joystick, todavia no esta adaptado a la comunicacion serial
 
 //Ambos se alimentan con 4 pilas AA que entregan 5V, GND a la placa.
 
