@@ -157,6 +157,7 @@ def send_serial_signal(arduino, red_vector: list):
         arduino.write(f"{signal}\n".encode('utf-8'))
         print(f"→ Señal enviada: {signal}")
         #este sleep me tranca todo pero sin el se satura el puerto serial
+        #hay que mandar la informacion a una frecuencia fija. Mando una informacion, mientras no cambie no mando nada.
         #time.sleep(0.2)  # Pequeña pausa para evitar saturar el buffer
     except serial.SerialException:
         print("⚠️ Error al enviar señal serial.")
