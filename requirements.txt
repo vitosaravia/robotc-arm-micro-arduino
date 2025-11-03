@@ -1,0 +1,6 @@
+pip install opencv-python numpy
+pip uninstall opencv-python -y
+pip install opencv-python-headless
+sudo apt install python3-opencv
+pip uninstall opencv-python opencv-python-headless -y
+sudo apt install python3-opencv libgtk-3-dev
