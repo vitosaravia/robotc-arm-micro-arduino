@@ -6,6 +6,10 @@ import numpy as np
 import serial
 import time
 
+# Variables globales para recordar el último envío al arduino
+_last_signal = None
+_last_send_time = 0
+
 
 # ────────────────────────────────────────────────────────────────
 # 1️⃣ Inicialización de cámara e interfaz
@@ -133,17 +137,23 @@ def initialize_serial(port: str = "/dev/ttyACM0", baudrate: int = 9600):
         return None
 
 
-def send_serial_signal(arduino, red_vector: list):
+def send_serial_signal(arduino, red_vector: list, send_interval: float = 0.5):
     """
-    Envía una señal al Arduino según el vector rojo:
-    [1,0,0] -> 'L' (izquierda)
-    [0,1,0] -> 'C' (centro)
-    [0,0,1] -> 'R' (derecha)
-    [0,0,0] -> 'N' (no detectado)
+    Envía señal al Arduino a una frecuencia máxima fija (send_interval)
+    solo si la información cambió desde el último envío.
+
+    red_vector:
+        [1,0,0] -> 'L' (izquierda)
+        [0,1,0] -> 'C' (centro)
+        [0,0,1] -> 'R' (derecha)
+        [0,0,0] -> 'N' (no detectado)
     """
+    global _last_signal, _last_send_time
+
     if arduino is None:
         return
 
+    # Traducir el vector a un carácter
     if red_vector == [1, 0, 0]:
         signal = 'L'
     elif red_vector == [0, 1, 0]:
@@ -153,14 +163,18 @@ def send_serial_signal(arduino, red_vector: list):
     else:
         signal = 'N'
 
-    try:
-        arduino.write(f"{signal}\n".encode('utf-8'))
-        print(f"→ Señal enviada: {signal}")
-        #este sleep me tranca todo pero sin el se satura el puerto serial
-        #hay que mandar la informacion a una frecuencia fija. Mando una informacion, mientras no cambie no mando nada.
-        #time.sleep(0.2)  # Pequeña pausa para evitar saturar el buffer
-    except serial.SerialException:
-        print("⚠️ Error al enviar señal serial.")
+    now = time.time()
+    elapsed = now - _last_send_time
+
+    # Enviar solo si cambió la señal o pasó más tiempo del permitido
+    if signal != _last_signal or elapsed >= send_interval:
+        try:
+            arduino.write(f"{signal}\n".encode('utf-8'))
+            _last_signal = signal
+            _last_send_time = now
+            print(f"→ Señal enviada: {signal} (Δt={elapsed:.2f}s)")
+        except serial.SerialException:
+            print("⚠️ Error al enviar señal serial.")
 
 
 # ────────────────────────────────────────────────────────────────
