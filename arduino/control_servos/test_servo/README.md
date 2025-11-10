@@ -4,7 +4,7 @@ Esta carpeta contiene los **códigos de prueba y calibración** de los servomoto
 
 ## 📂 Subcarpetas
 
-- **test-1/** → contiene el primer prototipo de control (`test-1.ino`), usado para verificar los ángulos de movimiento de cada servo y su respuesta.
+- **calibration_mode** → contiene el primer prototipo de control (`calibration_mode.ino`), usado para verificar los ángulos de movimiento de cada servo y su respuesta.
 
 ## 🎯 Objetivo
 
