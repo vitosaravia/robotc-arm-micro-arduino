@@ -15,7 +15,7 @@ _last_send_time = 0
 # 1️⃣ Inicialización de cámara e interfaz
 # ────────────────────────────────────────────────────────────────
 
-def initialize_camera(index: int = 0): #Por default 0 es la camara integrada, 1 una camara usb externa.
+def initialize_camera(index: int = 1): #Por default 0 es la camara integrada, 1 una camara usb externa.
     """Inicializa la cámara y devuelve el objeto VideoCapture."""
     cap = cv2.VideoCapture(index)
     if not cap.isOpened():
@@ -211,7 +211,7 @@ def draw_detections(frame: np.ndarray, detections: list):
 def run_interface():
     """Ejecuta el flujo principal de captura, detección y comunicación serial."""
     window_name = "Detección de colores"
-    cap = initialize_camera(0)
+    cap = initialize_camera(2)
     create_window(window_name)
     arduino = initialize_serial("/dev/ttyACM0", 9600)
 
