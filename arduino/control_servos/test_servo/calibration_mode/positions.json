@@ -1,0 +1,67 @@
+{
+  "posiciones": [
+    {
+      "nombre": "Home",
+      "Base": 50,
+      "Brazo1": 100,
+      "Brazo2": 0,
+      "GiroZ": 0,
+      "GiroX": 165,
+      "Gripper": 105
+    },
+    {
+      "nombre": "izq_1",
+      "Base": 65,
+      "Brazo1": 60,
+      "Brazo2": 0,
+      "GiroZ": 35,
+      "GiroX": 180,
+      "Gripper": 90
+    },
+    {
+      "nombre": "izq_2",
+      "Base": 65,
+      "Brazo1": 25,
+      "Brazo2": 0,
+      "GiroZ": 0,
+      "GiroX": 120,
+      "Gripper": 120
+    },
+    {
+      "nombre": "izq_agarre_abierto",
+      "Base": 69,
+      "Brazo1": 36,
+      "Brazo2": 0,
+      "GiroZ": 0,
+      "GiroX": 123,
+      "Gripper": 120
+    },
+    {
+      "nombre": "izq_agarre_cerrado",
+      "Base": 69,
+      "Brazo1": 36,
+      "Brazo2": 0,
+      "GiroZ": 0,
+      "GiroX": 123,
+      "Gripper": 20
+    },
+    {
+      "nombre": "izq_3",
+      "Base": 50,
+      "Brazo1": 100,
+      "Brazo2": 0,
+      "GiroZ": 0,
+      "GiroX": 165,
+      "Gripper": 20
+    },
+    {
+      "nombre": "izq_4",
+      "Base": 180,
+      "Brazo1": 75,
+      "Brazo2": 0,
+      "GiroZ": 0,
+      "GiroX": 123,
+      "Gripper": 120
+    }
+  ]
+}

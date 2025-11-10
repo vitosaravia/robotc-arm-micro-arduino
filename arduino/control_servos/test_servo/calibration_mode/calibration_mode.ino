@@ -1,94 +1,124 @@
-// Este codigo es el primero donde se toma el valor VRx del joystick para mover el servo-1
-// falta el control de un servo, que puede ser el de la pinza
-// este codigo es por control de joystick, todavia no esta adaptado a la comunicacion serial
-
-//Ambos se alimentan con 4 pilas AA que entregan 5V, GND a la placa.
-
-
-
 #include <Servo.h>
 
-Servo servo_1;  //servo_1 -> joystick 1 X -> base rotativa
-Servo servo_2;  //servo_2 -> joystick 1 Y -> 1er brazo
-Servo servo_3;  //servo_3 -> joystick 2 X -> 2do brazo
-Servo servo_4;  //servo_4 -> joystick 2 Y -> giro gripper
-Servo servo_5;  //servo_5 -> 
-Servo gripper; //servo_G -> gripper
+// --- Declaración de servos ---
+Servo servo_1;  // base
+Servo servo_2;  // primer brazo
+Servo servo_3;  // segundo brazo
+Servo servo_4;  // giro Z
+Servo servo_5;  // giro X
+Servo servo_G;  // apertura del gripper
 
-int Grados_1 = 0;  // posición servo_1
-int Grados_2 = 0;  // posición servo_2
-int Grados_3 = 0;  // posición servo_3
-int Grados_4 = 0;  // posición servo_4
-int Grados_5 = 0;  // posición servo_5
-int Grados_G = 0;  // posición servo_G
+// --- Posiciones iniciales ---
+int Grados_1 = 30;
+int Grados_2 = 70;
+int Grados_3 = 0;
+int Grados_4 = 0;
+int Grados_5 = 20;
+int Grados_G = 0;
 
-#define Joystick1_X A0  // entrada analogica Joystick1 X
-#define Joystick1_Y A1  // entrada analogica Joystick1 Y
-#define Joystick2_X A2  // entrada analogica Joystick1 X
-#define Joystick2_Y A3  // entrada analogica Joystick1 Y
+// --- Pines analógicos de joysticks ---
+#define Joystick1_X A1
+#define Joystick1_Y A0
+#define Joystick2_X A2
+#define Joystick2_Y A3
+#define Joystick3_X A4
+#define Joystick3_Y A5
 
-#define button_gripper 4  // Pin donde está conectado el botón que activa el gripper
-#define giro_servo_4 5  // Servo 4 no se necesita.
+// --- Pines de botones ---
+#define button_open 4   // imprime posiciones
+#define button_close 5  // cierra gripper
+
+// --- Variable para detectar flanco del botón open ---
+bool lastButtonState = HIGH;
 
 void setup() {
   Serial.begin(9600);
-  servo_1.attach(11);   // salida pwm pin 
-  servo_2.attach(9);   // salida pwm pin 
-  servo_3.attach(8);   // salida pwm pin 
-  servo_4.attach(10);   // salida pwm pin -> este no lo necesito
-  servo_5.attach(6);   // salida pwm pin 
 
-  pinMode(button_gripper, INPUT);
-}
+  // Asignación de pines PWM
+  servo_1.attach(11);   // base
+  servo_2.attach(9);   // primer brazo
+  servo_3.attach(8);  // segundo brazo
+  servo_4.attach(10);  // giro Z
+  servo_5.attach(6);   // giro X
+  servo_G.attach(3);   // gripper apertura
 
-void loop() {
-  int Joystick1_X_valor = analogRead(Joystick1_X);
-  int Joystick1_Y_valor = analogRead(Joystick1_Y);
+  pinMode(button_open, INPUT_PULLUP);
+  pinMode(button_close, INPUT_PULLUP);
 
-  int Joystick2_X_valor = analogRead(Joystick2_X);
-  int Joystick2_Y_valor = analogRead(Joystick2_Y);
-
-  if (Joystick1_X_valor < 340) Grados_1 += 3;
-  else if (Joystick1_X_valor > 680) Grados_1 -= 3;
-  
-  if (Joystick1_Y_valor < 340) Grados_2 += 3;
-  else if (Joystick1_Y_valor > 680) Grados_2 -= 3;
-
-  if (Joystick2_X_valor < 340) Grados_3 += 3;
-  else if (Joystick2_X_valor > 680) Grados_3 -= 3;
-  
-  if (Joystick2_Y_valor < 340) Grados_4 += 3;
-  else if (Joystick2_Y_valor > 680) Grados_4 -= 3;
-
-  // Rangos de los servos
-  Grados_1 = min(180, max(0, Grados_1));  // Angulos maximos y minimos de servo 1
-  Grados_2 = min(180, max(0, Grados_2));  // Angulos maximos y minimos de servo 2
-
-  Grados_3 = min(180, max(0, Grados_3));  // Angulos maximos y minimos de servo 3
-  Grados_4 = min(180, max(0, Grados_4));  // Angulos maximos y minimos de servo 4
-
-
-
- 
-    // Monitorear por Serial
-  Serial.print("Grados eje 1 : ");
-  Serial.println(Grados_1); 
-  Serial.print("Grados eje 2 : ");
-  Serial.println(Grados_2);  
-  Serial.print("Grados eje 3 : ");
-  Serial.println(Grados_3); 
-  Serial.print("Grados eje 4 : ");
-  Serial.println(Grados_4);  
-  Serial.print("Grados eje 5: ");
-  Serial.println(Grados_5);
-  Serial.print("\n");
-  
+  // Posición inicial
   servo_1.write(Grados_1);
   servo_2.write(Grados_2);
   servo_3.write(Grados_3);
-  servo_6.write(Grados_4);
+  servo_4.write(Grados_4);
   servo_5.write(Grados_5);
+  servo_G.write(Grados_G);
+}
 
-  delay(50);  // Pequeña pausa para estabilidad
-  
+void loop() {
+  // --- Lectura de todos los joysticks ---
+  int J1X = analogRead(Joystick1_X);
+  int J1Y = analogRead(Joystick1_Y);
+  int J2X = analogRead(Joystick2_X);
+  int J2Y = analogRead(Joystick2_Y);
+  int J3X = analogRead(Joystick3_X);
+  int J3Y = analogRead(Joystick3_Y);
+
+  // --- Joystick 1 controla base y primer brazo ---
+  if (J1X < 340) Grados_1 += 3;
+  else if (J1X > 680) Grados_1 -= 3;
+
+  if (J1Y < 340) Grados_2 += 3;
+  else if (J1Y > 680) Grados_2 -= 3;
+
+  // --- Joystick 2 controla segundo brazo y giro Z ---
+  if (J2X < 340) Grados_3 += 3;
+  else if (J2X > 680) Grados_3 -= 3;
+
+  if (J2Y < 340) Grados_4 += 3;
+  else if (J2Y > 680) Grados_4 -= 3;
+
+  // --- Joystick 3 controla giro X y apertura del gripper ---
+  if (J3X < 340) Grados_5 += 3;
+  else if (J3X > 680) Grados_5 -= 3;
+
+  if (J3Y < 380) Grados_G += 1;   // abrir gripper
+  else if (J3Y > 580) Grados_G -= 1; // cerrar gripper
+
+  // --- Control con botón adicional para cerrar pinza ---
+  if (digitalRead(button_close) == LOW) {
+    Grados_G -= 3;
+  }
+
+  // --- Limitar rangos ---
+  Grados_1 = constrain(Grados_1, 0, 180);
+  Grados_2 = constrain(Grados_2, 0, 180);
+  Grados_3 = constrain(Grados_3, 0, 180);  // ✅ corregido
+  Grados_4 = constrain(Grados_4, 0, 180);
+  Grados_5 = constrain(Grados_5, 0, 180);
+  Grados_G = constrain(Grados_G, 20, 120);
+
+
+  // --- Actualizar servos ---
+  servo_1.write(Grados_1);
+  servo_2.write(Grados_2);
+  servo_3.write(Grados_3);
+  servo_4.write(Grados_4);
+  servo_5.write(Grados_5);
+  servo_G.write(Grados_G);
+
+  // --- Imprimir lista con el botón button_open ---
+  bool buttonState = digitalRead(button_open);
+  if (buttonState == LOW && lastButtonState == HIGH) {
+    Serial.print("[");
+    Serial.print("Base="); Serial.print(Grados_1);
+    Serial.print(", Brazo1="); Serial.print(Grados_2);
+    Serial.print(", Brazo2="); Serial.print(Grados_3);
+    Serial.print(", GiroZ="); Serial.print(Grados_4);
+    Serial.print(", GiroX="); Serial.print(Grados_5);
+    Serial.print(", Gripper="); Serial.print(Grados_G);
+    Serial.println("]");
+  }
+  lastButtonState = buttonState;
+
+  delay(20);
 }
