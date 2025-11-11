@@ -167,7 +167,7 @@ def send_serial_signal(arduino, red_vector: list, send_interval: float = 0.5):
     elapsed = now - _last_send_time
 
     # Enviar solo si cambió la señal o pasó más tiempo del permitido
-    if signal != _last_signal or elapsed >= send_interval:
+    if signal != _last_signal:
         try:
             arduino.write(f"{signal}\n".encode('utf-8'))
             _last_signal = signal
@@ -211,7 +211,7 @@ def draw_detections(frame: np.ndarray, detections: list):
 def run_interface():
     """Ejecuta el flujo principal de captura, detección y comunicación serial."""
     window_name = "Detección de colores"
-    cap = initialize_camera(2)
+    cap = initialize_camera(0)
     create_window(window_name)
     arduino = initialize_serial("/dev/ttyACM0", 9600)
 
